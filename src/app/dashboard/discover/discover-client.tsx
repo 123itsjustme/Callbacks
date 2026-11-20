@@ -245,11 +245,11 @@ export function DiscoverClient({
               </p>
               <div className="mt-6 flex flex-wrap justify-center gap-2">
                 {companies.length ? (
-                  <Button onClick={runDiscovery} disabled={running}>
+                  <Button variant="pop" onClick={runDiscovery} disabled={running}>
                     <Radar className="size-4" /> Find open roles
                   </Button>
                 ) : null}
-                <Link href={companies.length ? "/dashboard/companies" : "/dashboard/companies?suggest=1"} className={buttonClass(companies.length ? "secondary" : "primary")}>
+                <Link href={companies.length ? "/dashboard/companies" : "/dashboard/companies?suggest=1"} className={buttonClass(companies.length ? "secondary" : "pop")}>
                   {companies.length ? "Manage companies" : "Find my 10 companies"}
                 </Link>
               </div>
@@ -289,7 +289,7 @@ export function DiscoverClient({
             Checks the job boards of your {companies.length} compan{companies.length === 1 ? "y" : "ies"}, then searches the web for similar roles. Runs automatically every day too.
           </p>
           <div className="mt-4 flex flex-wrap gap-2">
-            <Button size="sm" onClick={runDiscovery} disabled={running}>
+            <Button size="sm" variant="pop" onClick={runDiscovery} disabled={running}>
               {running ? <Loader2 className="size-3.5 animate-spin" /> : <Radar className="size-3.5" />} {running ? "Searching…" : "Search now"}
             </Button>
             <Link href="/dashboard/companies" className={buttonClass("secondary", "sm")}>

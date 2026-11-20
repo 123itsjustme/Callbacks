@@ -5,8 +5,8 @@ import { useEffect, useOptimistic, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Check, Loader2, MapPin, X, Eye, Sparkles } from "lucide-react";
 import { approveAction, setStatusAction } from "@/app/dashboard/actions";
-import { Button, OrgTypeBadge, ScorePill } from "@/components/ui";
-import { cn, type PipelineStatus } from "@/lib/utils";
+import { Button, OrgTypeBadge, ScorePill, StageDot } from "@/components/ui";
+import { STAGE_STYLE, cn, type PipelineStatus } from "@/lib/utils";
 
 export type KanbanItem = {
   id: string;
@@ -24,7 +24,7 @@ export type KanbanItem = {
 
 const COLUMNS: { key: PipelineStatus; label: string; hint: string }[] = [
   { key: "new", label: "New matches", hint: "Review & approve" },
-  { key: "approved", label: "Approved", hint: "Assets ready to send" },
+  { key: "approved", label: "Approved", hint: "Ready to send" },
   { key: "applied", label: "Applied", hint: "" },
   { key: "interview", label: "Interview", hint: "" },
   { key: "offer", label: "Offer", hint: "" },
@@ -91,11 +91,16 @@ export function KanbanBoard({ items }: { items: KanbanItem[] }) {
                 const id = e.dataTransfer.getData("text/plain");
                 if (id) changeStatus(id, col.key);
               }}
-              className={cn("flex w-72 shrink-0 flex-col rounded-2xl bg-ink/[0.03] p-2 transition", dragOver === col.key && "bg-accent-soft ring-2 ring-accent/30")}
+              style={{ background: STAGE_STYLE[col.key].tint }}
+              className={cn("relative flex w-72 shrink-0 flex-col overflow-hidden rounded-2xl p-2 pt-3 transition", dragOver === col.key && "ring-2 ring-pop")}
             >
-              <header className="flex items-baseline justify-between px-2 pb-2 pt-1">
-                <h2 className="text-sm font-medium">
-                  {col.label} <span className="text-muted">{colItems.length}</span>
+              <span aria-hidden="true" className="absolute inset-x-0 top-0 h-1" style={{ background: STAGE_STYLE[col.key].bar }} />
+              <header className="flex items-center justify-between gap-2 px-2 pb-2 pt-1">
+                <h2 className="flex items-center gap-2 text-sm font-medium">
+                  <StageDot status={col.key} />
+                  {col.label}
+                  {col.key === "offer" && colItems.length > 0 && <span className="text-pop" aria-hidden="true">★</span>}
+                  <span className="rounded-full bg-surface px-1.5 font-mono text-[11px] text-muted">{colItems.length}</span>
                 </h2>
                 <span className="text-[11px] text-muted">{col.hint}</span>
               </header>

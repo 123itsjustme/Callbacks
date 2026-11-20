@@ -40,3 +40,14 @@ export const AVAILABILITY_OPTIONS = [
   "Available in 3 months",
   "Not looking",
 ];
+
+/** Stage colours: warm grey → marigold → sage → forest green. Same palette as the microsite. */
+export const STAGE_STYLE: Record<string, { dot: string; tint: string; bar: string; label: string }> = {
+  new: { dot: "#a8a294", tint: "rgba(168,162,148,0.10)", bar: "#d9d4c7", label: "New" },
+  approved: { dot: "#f2b53a", tint: "rgba(242,181,58,0.10)", bar: "#f2b53a", label: "Ready to send" },
+  applied: { dot: "#7fa58e", tint: "rgba(127,165,142,0.09)", bar: "#7fa58e", label: "Applied" },
+  interview: { dot: "#1f4d3a", tint: "rgba(31,77,58,0.05)", bar: "#1f4d3a", label: "Interview" },
+  offer: { dot: "#1f4d3a", tint: "rgba(31,77,58,0.07)", bar: "linear-gradient(90deg,#1f4d3a 60%,#f2b53a)", label: "Offer" },
+  passed: { dot: "#cfcabd", tint: "transparent", bar: "#e3dfd4", label: "Passed" },
+  rejected: { dot: "#cfcabd", tint: "transparent", bar: "#e3dfd4", label: "Rejected" },
+};

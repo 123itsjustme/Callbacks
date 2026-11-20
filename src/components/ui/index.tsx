@@ -1,9 +1,10 @@
-import { cn } from "@/lib/utils";
+import { STAGE_STYLE, cn } from "@/lib/utils";
 import type { ComponentProps } from "react";
 
-type Variant = "primary" | "secondary" | "ghost" | "danger";
+type Variant = "primary" | "pop" | "secondary" | "ghost" | "danger";
 const variants: Record<Variant, string> = {
   primary: "bg-ink text-paper hover:bg-ink/85",
+  pop: "bg-pop text-ink font-semibold hover:brightness-95 shadow-[0_1px_0_rgba(0,0,0,0.08)]",
   secondary: "bg-surface text-ink border border-line hover:border-ink/40",
   ghost: "text-ink hover:bg-ink/5",
   danger: "bg-surface text-warn border border-line hover:border-warn/50",
@@ -110,4 +111,9 @@ function inline(s: string) {
       );
     return p;
   });
+}
+
+export function StageDot({ status, className }: { status: string; className?: string }) {
+  const st = STAGE_STYLE[status] ?? STAGE_STYLE.new;
+  return <span aria-hidden="true" className={cn("inline-block size-2 shrink-0 rounded-full", className)} style={{ background: st.dot }} />;
 }

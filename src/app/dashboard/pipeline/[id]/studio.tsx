@@ -196,6 +196,7 @@ function NextStep(p: ActProps) {
   const [editing, setEditing] = useState(false);
   const today = new Date().toISOString().slice(0, 10);
   const overdue = p.nextActionDue && p.nextActionDue < today;
+  const dueToday = p.nextActionDue === today;
   if (!p.nextAction && !editing)
     return (
       <button type="button" onClick={() => setEditing(true)} className="w-full rounded-2xl border border-dashed border-line p-3 text-left text-sm text-muted hover:border-ink/30">
@@ -230,13 +231,13 @@ function NextStep(p: ActProps) {
       </Card>
     );
   return (
-    <Card className={cn("flex flex-wrap items-center gap-3 p-4", overdue && "border-orange-200 bg-orange-50")}>
-      <CalendarClock className={cn("size-5 shrink-0", overdue ? "text-warn" : "text-accent")} />
+    <Card className={cn("flex flex-wrap items-center gap-3 p-4", overdue && "border-orange-200 bg-orange-50", dueToday && "border-pop bg-pop/15")}>
+      <CalendarClock className={cn("size-5 shrink-0", overdue ? "text-warn" : dueToday ? "text-ink" : "text-accent")} />
       <div className="min-w-0 flex-1">
         <p className="text-[11px] font-semibold uppercase tracking-wide text-muted">Next step{p.nextActionDue ? ` · ${overdue ? "overdue, was due" : "due"} ${new Date(p.nextActionDue).toLocaleDateString(undefined, { day: "numeric", month: "short" })}` : ""}</p>
         <p className="text-sm font-medium">{p.nextAction}</p>
       </div>
-      <Button size="sm" disabled={p.pending} onClick={() => p.act("Marking done…", () => setNextActionAction(p.pipelineId, null, null), "Done.")}>
+      <Button size="sm" variant={dueToday || overdue ? "pop" : "primary"} disabled={p.pending} onClick={() => p.act("Marking done…", () => setNextActionAction(p.pipelineId, null, null), "Done.")}>
         <Check className="size-3.5" /> Done
       </Button>
       <Button size="sm" variant="ghost" onClick={() => setEditing(true)}>

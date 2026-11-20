@@ -71,7 +71,7 @@ export function CompaniesClient({ companies, autoSuggest }: { companies: Company
                   <Check className="size-3.5" /> Keep all
                 </Button>
               )}
-              <Button size="sm" variant={suggested.length ? "secondary" : "primary"} disabled={!!busy} onClick={suggest}>
+              <Button size="sm" variant={suggested.length ? "secondary" : "pop"} disabled={!!busy} onClick={suggest}>
                 {busy === "suggest" ? <Loader2 className="size-3.5 animate-spin" /> : <Sparkles className="size-3.5" />}
                 {busy === "suggest" ? "Researching…" : suggested.length || active.length ? "Suggest more" : "Find my 10 companies"}
               </Button>
@@ -132,7 +132,7 @@ export function CompaniesClient({ companies, autoSuggest }: { companies: Company
               On your list <span className="text-muted">{active.length}</span>
             </h2>
             {active.length > 0 && (
-              <Link href="/dashboard/discover?run=1" className={buttonClass("primary", "sm")}>
+              <Link href="/dashboard/discover?run=1" className={buttonClass("pop", "sm")}>
                 <Radar className="size-3.5" /> Find open roles
               </Link>
             )}

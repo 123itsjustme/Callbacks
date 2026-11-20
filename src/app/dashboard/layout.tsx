@@ -8,6 +8,7 @@ export default async function DashboardLayout({ children }: LayoutProps<"/dashbo
   const { supabase, user } = await requireUser();
   const { data: profile } = await supabase.from("profiles").select("username, full_name").eq("id", user.id).maybeSingle();
   if (!profile) redirect("/onboarding");
+  const { count: newCount } = await supabase.from("user_pipeline").select("id", { count: "exact", head: true }).eq("user_id", user.id).eq("status", "new");
 
   return (
     <div className="flex min-h-full flex-1 flex-col">
@@ -16,7 +17,7 @@ export default async function DashboardLayout({ children }: LayoutProps<"/dashbo
           <Link href="/dashboard" className="font-serif text-xl">
             Callback
           </Link>
-          <DashNav />
+          <DashNav newCount={newCount ?? 0} />
           <div className="ml-auto flex items-center gap-3 text-sm">
             <Link href={`/${profile.username}`} target="_blank" className="hidden items-center gap-1.5 rounded-full border border-line bg-surface px-3 py-1.5 hover:border-ink/40 sm:inline-flex">
               View my microsite <ExternalLink className="size-3.5" />
