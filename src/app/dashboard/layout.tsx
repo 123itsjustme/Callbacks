@@ -14,7 +14,7 @@ export default async function DashboardLayout({ children }: LayoutProps<"/dashbo
       <header className="sticky top-0 z-30 border-b border-line bg-paper/90 backdrop-blur">
         <div className="mx-auto flex h-14 max-w-7xl items-center gap-6 px-4">
           <Link href="/dashboard" className="font-serif text-xl">
-            Folio
+            Callback
           </Link>
           <DashNav />
           <div className="ml-auto flex items-center gap-3 text-sm">

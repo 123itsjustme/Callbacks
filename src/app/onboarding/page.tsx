@@ -13,7 +13,7 @@ export default async function OnboardingPage() {
     <main className="mx-auto w-full max-w-2xl flex-1 px-4 py-12">
       <div className="mb-8 flex items-center justify-between">
         <Link href="/" className="font-serif text-2xl">
-          Folio
+          Callback
         </Link>
         {profile && (
           <Link href="/dashboard" className="text-sm text-muted hover:text-ink">

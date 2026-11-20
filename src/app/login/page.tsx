@@ -13,7 +13,7 @@ export default async function LoginPage({ searchParams }: PageProps<"/login">) {
     <main className="flex flex-1 items-center justify-center px-4 py-16">
       <div className="w-full max-w-sm">
         <Link href="/" className="mb-8 block text-center font-serif text-3xl">
-          Folio
+          Callback
         </Link>
         <Card className="p-6">
           {error && <p className="mb-4 text-sm text-warn">{error}</p>}

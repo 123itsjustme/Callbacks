@@ -1,4 +1,4 @@
-# Folio — AI Job Hunter & Portfolio Microsite
+# Callback — AI Job Hunter & Portfolio Microsite
 
 Upload a CV → master profile + live microsite (`/[username]`) → discover/import jobs → approve on a Kanban →
 truth-anchored tailored CV (PDF), tone-matched cover letter and a company pitch page (`/[username]/for/[company]`).

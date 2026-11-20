@@ -7,7 +7,7 @@ const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"]
 const serif = Instrument_Serif({ variable: "--font-serif", subsets: ["latin"], weight: "400", style: ["normal", "italic"] });
 
 export const metadata: Metadata = {
-  title: { default: "Folio — CV to portfolio to offer", template: "%s · Folio" },
+  title: { default: "Callback — CV to portfolio to offer", template: "%s · Callback" },
   description: "Upload your CV, get a live portfolio microsite, and truth-anchored applications for every role you approve.",
   metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"),
 };

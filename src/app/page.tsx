@@ -12,7 +12,7 @@ export default async function Home() {
   return (
     <main className="flex-1">
       <header className="mx-auto flex max-w-6xl items-center justify-between px-6 py-6">
-        <span className="font-serif text-2xl">Folio</span>
+        <span className="font-serif text-2xl">Callback</span>
         <nav className="flex items-center gap-2">
           {user ? (
             <Link href="/dashboard" className={buttonClass("primary", "sm")}>
@@ -37,7 +37,7 @@ export default async function Home() {
           Upload your CV. <em className="text-accent">Get matched</em> — and a live portfolio for every company you pitch.
         </h1>
         <p className="mt-8 max-w-2xl text-lg leading-relaxed text-muted">
-          Folio turns your CV into a master profile and an interactive microsite, finds roles at agencies, indies, publishers and
+          Callback turns your CV into a master profile and an interactive microsite, finds roles at agencies, indies, publishers and
           in-house teams, and writes a truth-anchored CV, cover letter and custom landing page for each one you approve.
         </p>
         <div className="mt-10 flex flex-wrap gap-3">

@@ -13,7 +13,7 @@ export function validateUsername(u: string): string | null {
 /** Pick an available username derived from the person's name. */
 export async function uniqueUsername(supabase: SupabaseClient, fullName: string, userId: string) {
   let base = slugify(fullName).slice(0, 30) || "me";
-  if (base.length < 2 || RESERVED_USERNAMES.has(base)) base = `${base}-folio`;
+  if (base.length < 2 || RESERVED_USERNAMES.has(base)) base = `${base}-cv`;
   for (let i = 0; i < 20; i++) {
     const candidate = i === 0 ? base : `${base}-${i + 1}`;
     const { data } = await supabase.from("profiles").select("id, is_public").eq("username", candidate).maybeSingle();
