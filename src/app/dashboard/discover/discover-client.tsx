@@ -274,7 +274,7 @@ export function DiscoverClient({
               type="button"
               onClick={() => commit(1)}
               aria-label="Apply (right arrow)"
-              className="flex size-16 items-center justify-center rounded-full bg-accent text-white shadow-sm transition hover:scale-105"
+              className="flex size-16 items-center justify-center rounded-full bg-pop text-ink shadow-sm transition hover:scale-105"
             >
               <Check className="size-7" />
             </button>
@@ -376,7 +376,7 @@ function CardBody({ card, fit }: { card: DeckCard; fit?: Fit | "error" }) {
   const score = live?.match_score ?? card.match_score;
   const reasoning = live?.fit_reasoning ?? (card.assessed ? card.fit_reasoning : null);
   const flags = live?.red_flags ?? (card.assessed ? card.red_flags : []);
-  const tone = (score ?? 0) >= 75 ? "bg-accent text-white" : (score ?? 0) >= 50 ? "bg-accent-soft text-accent" : "bg-paper text-muted";
+  const tone = (score ?? 0) >= 80 ? "bg-pop text-ink" : (score ?? 0) >= 65 ? "bg-accent text-white" : (score ?? 0) >= 50 ? "bg-accent-soft text-accent" : "bg-paper text-muted";
 
   return (
     <div className="flex h-full flex-col">

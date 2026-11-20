@@ -51,7 +51,7 @@ export function Badge({ className, tone = "neutral", ...props }: ComponentProps<
 
 export function ScorePill({ score }: { score: number | null }) {
   if (score == null) return null;
-  const tone = score >= 75 ? "bg-accent text-white" : score >= 50 ? "bg-accent-soft text-accent" : "bg-paper text-muted";
+  const tone = score >= 80 ? "bg-pop text-ink" : score >= 65 ? "bg-accent text-white" : score >= 50 ? "bg-accent-soft text-accent" : "bg-paper text-muted";
   return <span className={cn("rounded-full px-2 py-0.5 font-mono text-[11px] font-semibold", tone)}>{score}</span>;
 }
 

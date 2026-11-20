@@ -9,6 +9,8 @@
   --accent: #1f4d3a;
   --accent-soft: #e4efe8;
   --warn: #9a3412;
+  --pop: #f2b53a;
+  --pop-soft: rgba(242, 181, 58, 0.55);
 }
 
 @theme inline {
@@ -20,6 +22,8 @@
   --color-accent: var(--accent);
   --color-accent-soft: var(--accent-soft);
   --color-warn: var(--warn);
+  --color-pop: var(--pop);
+  --color-pop-soft: var(--pop-soft);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
   --font-serif: var(--font-serif);
@@ -34,3 +38,13 @@ body {
 .prose-cv h1, .prose-cv h2, .prose-cv h3 { font-weight: 600; margin: 1.2em 0 0.4em; }
 .prose-cv ul { list-style: disc; padding-left: 1.2em; margin: 0 0 0.85em; }
 .prose-cv strong { font-weight: 600; }
+
+/* Marigold highlighter stroke behind a phrase */
+.highlight {
+  color: var(--ink);
+  padding: 0 0.2em;
+  margin: 0 -0.08em;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+  background: linear-gradient(transparent 56%, var(--pop-soft) 56%, var(--pop-soft) 92%, transparent 92%);
+}

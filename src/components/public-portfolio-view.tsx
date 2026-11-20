@@ -38,13 +38,24 @@ export function PublicPortfolioView({ profile, master, pdfHref, pitch }: Props) 
   }, [master.projects, featuredIds, active]);
 
   const tone = availabilityTone(profile.availability_status);
+  // Headline results: featured projects first, only ones with a real metric.
+  const metrics = useMemo(() => {
+    const withMetric = master.projects.filter((p) => p.impact_metric && p.impact_metric.length <= 48);
+    return [...withMetric].sort((a, b) => (featuredIds.indexOf(b.id) > -1 ? 1 : 0) - (featuredIds.indexOf(a.id) > -1 ? 1 : 0)).slice(0, 3);
+  }, [master.projects, featuredIds]);
+  const bioParts = useMemo(() => splitLastSentence(profile.bio ?? ""), [profile.bio]);
+  const headlineParts = useMemo(() => {
+    const words = (pitch?.headline ?? "").trim().split(/\s+/).filter(Boolean);
+    if (words.length < 5) return { lead: words.join(" "), tail: null as string | null };
+    return { lead: words.slice(0, -3).join(" "), tail: words.slice(-3).join(" ") };
+  }, [pitch?.headline]);
   const social = Object.entries(profile.social_links ?? {}).filter(([, v]) => v);
 
   return (
     <div className="min-h-screen bg-paper">
       {pitch && (
-        <div className="border-b border-accent/15 bg-accent-soft px-4 py-2.5 text-center text-sm text-accent">
-          Custom portfolio & CV prepared for <strong className="font-semibold">{pitch.companyName}</strong>
+        <div className="bg-accent px-4 py-3 text-center text-sm text-accent-soft">
+          Custom portfolio & CV prepared for <strong className="font-semibold text-pop">{pitch.companyName}</strong>
         </div>
       )}
 
@@ -84,13 +95,36 @@ export function PublicPortfolioView({ profile, master, pdfHref, pitch }: Props) 
         </div>
       </header>
 
+      {metrics.length >= 2 && (
+        <section aria-label="Highlights" className="bg-ink">
+          <div className="mx-auto grid max-w-5xl gap-px px-6 sm:grid-cols-3">
+            {metrics.map((m, i) => (
+              <div key={m.id} className={cn("py-7 sm:px-6", i === 0 ? "sm:pl-0" : "border-t border-white/10 sm:border-l sm:border-t-0")}>
+                <p className="font-serif text-3xl leading-tight text-pop md:text-4xl">{m.impact_metric}</p>
+                <p className="mt-2 text-sm text-[#b9b4a6]">{m.title}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
       {pitch && (pitch.headline || pitch.intro) && (
         <section className="border-y border-line bg-surface">
           <div className="mx-auto max-w-5xl px-6 py-14">
             <p className="mb-4 text-xs font-medium uppercase tracking-[0.2em] text-muted">
               To the {pitch.companyName} team{pitch.jobTitle ? ` — re: ${pitch.jobTitle}` : ""}
             </p>
-            {pitch.headline && <h2 className="max-w-3xl font-serif text-3xl leading-tight md:text-5xl">{pitch.headline}</h2>}
+            {pitch.headline && (
+              <h2 className="max-w-3xl font-serif text-3xl leading-tight md:text-5xl">
+                {headlineParts.lead}
+                {headlineParts.tail && (
+                  <>
+                    {headlineParts.lead ? " " : ""}
+                    <em className="highlight">{headlineParts.tail}</em>
+                  </>
+                )}
+              </h2>
+            )}
             {pitch.intro && (
               <div className="mt-6 max-w-2xl space-y-4 text-lg leading-relaxed text-ink/80">
                 {pitch.intro.split(/\n{2,}/).map((para, i) => (
@@ -104,7 +138,15 @@ export function PublicPortfolioView({ profile, master, pdfHref, pitch }: Props) 
 
       {!pitch && profile.bio && (
         <section className="mx-auto max-w-5xl px-6 pb-6">
-          <p className="max-w-3xl font-serif text-2xl leading-snug text-ink/85 md:text-3xl">{profile.bio}</p>
+          <p className="max-w-3xl pt-8 font-serif text-2xl leading-snug text-ink/85 md:text-3xl">
+            {bioParts.lead}
+            {bioParts.last && (
+              <>
+                {" "}
+                <em className="highlight">{bioParts.last}</em>
+              </>
+            )}
+          </p>
         </section>
       )}
 
@@ -131,7 +173,7 @@ export function PublicPortfolioView({ profile, master, pdfHref, pitch }: Props) 
               return (
                 <article key={p.id} className={cn("group flex flex-col rounded-2xl border bg-surface p-6 transition hover:-translate-y-0.5 hover:shadow-[0_8px_30px_rgba(0,0,0,0.06)]", featured ? "border-accent/40" : "border-line")}>
                   {featured && pitch && (
-                    <span className="mb-3 inline-flex w-fit items-center gap-1 rounded-full bg-accent-soft px-2 py-0.5 text-[11px] font-medium text-accent">
+                    <span className="mb-3 inline-flex w-fit items-center gap-1 rounded-full bg-pop px-2 py-0.5 text-[11px] font-semibold text-ink">
                       <Pin className="size-3" /> Picked for {pitch.companyName}
                     </span>
                   )}
@@ -231,12 +273,30 @@ export function PublicPortfolioView({ profile, master, pdfHref, pitch }: Props) 
         </section>
       )}
 
-      <footer className="border-t border-line">
-        <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-4 px-6 py-8 text-sm text-muted">
+      <footer className="bg-ink text-paper">
+        <div className="mx-auto flex max-w-5xl flex-wrap items-end justify-between gap-8 px-6 py-16 md:py-20">
+          <div>
+            {profile.availability_status && <p className="mb-3 text-xs font-medium uppercase tracking-[0.2em] text-[#b9b4a6]">{profile.availability_status}</p>}
+            <h2 className="font-serif text-5xl leading-[0.95] md:text-7xl">
+              {pitch ? "Ready when" : "Let’s make"}
+              <br />
+              <em className="text-pop">{pitch ? "you are." : "something great."}</em>
+            </h2>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {profile.contact_email && (
+              <a href={`mailto:${profile.contact_email}`} className="inline-flex h-12 items-center gap-2 rounded-full bg-paper px-6 text-sm font-medium text-ink hover:bg-paper/90">
+                <Mail className="size-4" /> {profile.contact_email}
+              </a>
+            )}
+            <a href={pdfHref} className="inline-flex h-12 items-center gap-2 rounded-full border border-white/20 px-6 text-sm hover:border-white/50">
+              <Download className="size-4" /> {pitch ? `CV for ${pitch.companyName}` : "CV (PDF)"}
+            </a>
+          </div>
+        </div>
+        <div className="mx-auto flex max-w-5xl flex-wrap justify-between gap-3 border-t border-white/10 px-6 py-6 text-xs text-[#b9b4a6]">
           <span>© {profile.full_name}</span>
-          <a href={pdfHref} className="inline-flex items-center gap-1 hover:text-ink">
-            <Download className="size-3.5" /> CV (PDF)
-          </a>
+          <span>Made with Callback</span>
         </div>
       </footer>
     </div>
@@ -249,4 +309,12 @@ function Pill({ active, children, onClick }: { active: boolean; children: React.
       {children}
     </button>
   );
+}
+
+/** Split a bio so its final sentence can carry the highlighter. */
+function splitLastSentence(text: string): { lead: string; last: string | null } {
+  const t = text.trim();
+  const m = t.match(/^([\s\S]*?[.!?])\s+([^.!?]+[.!?]?)$/);
+  if (!m || m[2].length < 12 || m[2].length > 140) return { lead: t, last: null };
+  return { lead: m[1], last: m[2] };
 }

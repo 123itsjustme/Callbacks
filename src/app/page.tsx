@@ -40,7 +40,7 @@ export default async function Home({ searchParams }: PageProps<"/">) {
       <section className="mx-auto max-w-6xl px-6 pb-16 pt-12 md:pt-24">
         <p className="mb-6 text-xs font-medium uppercase tracking-[0.2em] text-muted">For producers, strategists & creatives</p>
         <h1 className="max-w-4xl font-serif text-5xl leading-[1.02] md:text-7xl">
-          Upload your CV. <em className="text-accent">Get matched</em> — and a live portfolio for every company you pitch.
+          Upload your CV. <em className="highlight">Get matched</em> — and a live portfolio for every company you pitch.
         </h1>
         <p className="mt-8 max-w-2xl text-lg leading-relaxed text-muted">
           Callback turns your CV into a master profile and an interactive microsite, finds roles at agencies, indies, publishers and
