@@ -14,6 +14,9 @@ export async function GET(request: NextRequest) {
       const { data: profile } = await supabase.from("profiles").select("id").eq("id", data.user.id).maybeSingle();
       return NextResponse.redirect(`${origin}${profile ? next : "/onboarding"}`);
     }
+    console.error("[auth/callback] code exchange failed:", error?.name, error?.message);
+  } else {
+    console.error("[auth/callback] no code in callback URL", searchParams.toString().slice(0, 200));
   }
   return NextResponse.redirect(`${origin}/login?error=${encodeURIComponent("That sign-in link is invalid or expired.")}`);
 }
