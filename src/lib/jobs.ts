@@ -138,7 +138,13 @@ export async function saveJob(input: {
     source_url: url,
     description_md: e.clean_description_md,
     summary_bullets: e.summary_bullets,
-    embedding: toPgVector(await embedText(jobEmbeddingText({ title: e.title, company_name, description_md: e.clean_description_md }))),
+    embedding: await embedText(jobEmbeddingText({ title: e.title, company_name, description_md: e.clean_description_md }))
+      .then(toPgVector)
+      .catch((err: Error) => {
+        // Embeddings power auto-matching only; never block an import on them.
+        console.error("[saveJob] embedding failed:", err.message);
+        return null;
+      }),
   };
   const { data, error } = await admin
     .from("jobs")

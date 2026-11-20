@@ -58,14 +58,17 @@ export async function uploadCvAction(formData: FormData): Promise<OnboardResult>
       awards: parsed.awards,
     };
 
-    const { data: existing } = await supabase.from("profiles").select("username, availability_status").eq("id", user.id).maybeSingle();
-    const username = existing?.username ?? (await uniqueUsername(supabase, parsed.full_name, user.id));
+    const { data: existing } = await supabase.from("profiles").select("username, full_name, availability_status").eq("id", user.id).maybeSingle();
+    // The name is often in a header/text box the PDF extractor can't read: fall back to what we already have, then the email.
+    const emailName = (user.email ?? "").split("@")[0].replace(/[._-]+/g, " ").replace(/\d+/g, "").trim();
+    const fullName = parsed.full_name.trim() || existing?.full_name?.trim() || titleCase(emailName) || "Your Name";
+    const username = existing?.username ?? (await uniqueUsername(supabase, fullName, user.id));
     const availability = existing?.availability_status ?? "Open to opportunities";
 
     const profileRow = {
       id: user.id,
       username,
-      full_name: parsed.full_name,
+      full_name: fullName,
       headline: parsed.headline,
       bio: parsed.bio,
       location: parsed.location ?? null,
@@ -77,25 +80,28 @@ export async function uploadCvAction(formData: FormData): Promise<OnboardResult>
     const { error: pErr } = await supabase.from("profiles").upsert(profileRow, { onConflict: "id" });
     if (pErr) return { ok: false, error: pErr.message.includes("username") ? "Username clash — please try again." : pErr.message };
 
-    const embedding = await embedText(profileEmbeddingText({ headline: parsed.headline, target_roles: parsed.inferred_target_roles, data: structured }));
+    // Save the parsed CV first, so an embeddings outage never loses the (expensive) parse.
     const { error: mErr } = await supabase
       .from("master_profiles")
-      .upsert({ user_id: user.id, raw_cv_text: rawText, structured_data: structured, embedding: toPgVector(embedding) }, { onConflict: "user_id" });
+      .upsert({ user_id: user.id, raw_cv_text: rawText, structured_data: structured }, { onConflict: "user_id" });
     if (mErr) return { ok: false, error: mErr.message };
 
     let matches = 0;
     let matchError: string | undefined;
     try {
+      const embedding = await embedText(profileEmbeddingText({ headline: parsed.headline, target_roles: parsed.inferred_target_roles, data: structured }));
+      await supabase.from("master_profiles").update({ embedding: toPgVector(embedding) }).eq("user_id", user.id);
       matches = await matchExistingJobs(supabase, user.id, embedding);
     } catch (e) {
-      matchError = (e as Error).message;
+      console.error("[onboarding] matching step failed:", (e as Error).message);
+      matchError = friendlyAiError(e);
     }
 
     revalidatePath("/dashboard", "layout");
     return {
       ok: true,
       username,
-      fullName: parsed.full_name,
+      fullName,
       headline: parsed.headline,
       bio: parsed.bio,
       availability,
@@ -105,8 +111,22 @@ export async function uploadCvAction(formData: FormData): Promise<OnboardResult>
     };
   } catch (e) {
     console.error(e);
-    return { ok: false, error: (e as Error).message || "Something went wrong parsing your CV." };
+    return { ok: false, error: friendlyAiError(e) || "Something went wrong parsing your CV." };
   }
+}
+
+function titleCase(s: string) {
+  return s.replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
+function friendlyAiError(e: unknown) {
+  const msg = (e as Error)?.message ?? "";
+  if (/no credits|insufficient_quota|billing/i.test(msg))
+    return /openai/i.test(msg) || /platform\.openai/i.test(msg)
+      ? "Job matching is paused: the OpenAI account has no credit. Your profile is saved; matching switches on once credit is added."
+      : "The AI provider account has run out of credit. Add credit and try again.";
+  if (/api key|401|unauthorized/i.test(msg)) return "An AI API key is missing or invalid. Check the environment variables.";
+  return msg;
 }
 
 export async function saveBasicsAction(formData: FormData): Promise<{ ok: boolean; error?: string; username?: string }> {
@@ -115,9 +135,12 @@ export async function saveBasicsAction(formData: FormData): Promise<{ ok: boolea
   const usernameError = validateUsername(username);
   if (usernameError) return { ok: false, error: usernameError };
   const availability = String(formData.get("availability_status") ?? "");
+  const fullName = String(formData.get("full_name") ?? "").trim();
+  if (!fullName) return { ok: false, error: "Add your name." };
   const { error } = await supabase
     .from("profiles")
     .update({
+      full_name: fullName,
       username,
       headline: String(formData.get("headline") ?? "").trim() || null,
       bio: String(formData.get("bio") ?? "").trim() || null,

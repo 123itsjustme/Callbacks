@@ -55,7 +55,7 @@ export function OnboardingClient({ appUrl, hasProfile }: { appUrl: string; hasPr
                   ? `${result.matches} matching job${result.matches === 1 ? "" : "s"} added to your pipeline.`
                   : "No matching jobs in the pool yet — paste a job URL or add companies to your watchlist."}
               </p>
-              {result.matchError && <p className="mt-1 text-xs text-warn">Job matching skipped: {result.matchError}</p>}
+              {result.matchError && <p className="mt-2 text-sm text-warn">{result.matchError}</p>}
               <div className="mt-4 flex flex-wrap gap-2">
                 <Link href="/dashboard" className={buttonClass("primary", "sm")}>
                   Open My Job Pipeline
@@ -76,7 +76,7 @@ export function OnboardingClient({ appUrl, hasProfile }: { appUrl: string; hasPr
               startSave(async () => {
                 const r = await saveBasicsAction(fd);
                 setSaveState(r);
-                if (r.ok && r.username) setResult({ ...result, username: r.username });
+                if (r.ok && r.username) setResult({ ...result, username: r.username, fullName: String(fd.get("full_name") ?? result.fullName) });
               })
             }
             className="grid gap-4"
@@ -97,6 +97,10 @@ export function OnboardingClient({ appUrl, hasProfile }: { appUrl: string; hasPr
                   ))}
                 </select>
               </div>
+            </div>
+            <div>
+              <Label htmlFor="full_name">Full name</Label>
+              <Input id="full_name" name="full_name" defaultValue={result.fullName} required />
             </div>
             <div>
               <Label htmlFor="headline">Headline</Label>
