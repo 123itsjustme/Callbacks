@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono, Instrument_Serif } from "next/font/google";
 import "./globals.css";
+import { appUrl } from "@/lib/utils";
 
 const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
 const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"] });
@@ -9,7 +10,7 @@ const serif = Instrument_Serif({ variable: "--font-serif", subsets: ["latin"], w
 export const metadata: Metadata = {
   title: { default: "Callback — CV to portfolio to offer", template: "%s · Callback" },
   description: "Upload your CV, get a live portfolio microsite, and truth-anchored applications for every role you approve.",
-  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"),
+  metadataBase: new URL(appUrl()),
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

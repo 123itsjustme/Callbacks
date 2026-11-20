@@ -23,7 +23,7 @@ The database schema is in `supabase/migrations/0001_init.sql` (already applied t
 
 ## Deploying (Vercel)
 
-Import the repo, add the env vars above (set `NEXT_PUBLIC_APP_URL` to the production URL), deploy.
+Import the repo, add the env vars above, deploy. `NEXT_PUBLIC_APP_URL` is optional on Vercel: it falls back to the project's production domain.
 `vercel.json` schedules `/api/cron/scrape` daily at 06:17 UTC; Vercel sends `Authorization: Bearer $CRON_SECRET`.
 LLM-heavy routes set `maxDuration = 300`.
 
