@@ -222,3 +222,19 @@ export async function removeFromPipelineAction(pipelineId: string): Promise<Resu
     return fail(e);
   }
 }
+
+export async function saveLocationPrefsAction(prefs: { places: string[]; modes: string[]; includeUnknown: boolean }): Promise<Result> {
+  try {
+    const { supabase, user } = await requireUser();
+    const places = [...new Set(prefs.places.map((p) => p.trim()).filter(Boolean))].slice(0, 12).map((p) => p.slice(0, 60));
+    const modes = prefs.modes.filter((m) => ["remote", "hybrid", "onsite"].includes(m));
+    const { error } = await supabase
+      .from("profiles")
+      .update({ job_locations: places, work_modes: modes.length ? modes : ["remote", "hybrid", "onsite"], include_unknown_location: !!prefs.includeUnknown })
+      .eq("id", user.id);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  } catch (e) {
+    return fail(e);
+  }
+}

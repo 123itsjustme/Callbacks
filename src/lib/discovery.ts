@@ -8,6 +8,7 @@ import { generateStructured, webResearch } from "./ai/models";
 import { CompanySuggestionsSchema, RoleSearchSchema } from "./ai/schemas";
 import { COMPANY_EXTRACT_PROMPT, COMPANY_RESEARCH_PROMPT, ROLE_EXTRACT_PROMPT, ROLE_SEARCH_PROMPT } from "./ai/prompts";
 import { slugify } from "./utils";
+import { describePrefs, matchesLocation, type LocationPrefs, type WorkMode } from "./location";
 import type { OrgType } from "./ai/schemas";
 
 export type CompanyRow = {
@@ -140,6 +141,12 @@ async function candidateBrief(userId: string) {
   const admin = createAdminClient();
   const { profile, master } = await loadUserContext(admin, userId);
   if (!profile || !master) throw new Error("Upload your CV first.");
+  const { data: lp } = await admin.from("profiles").select("job_locations, work_modes, include_unknown_location").eq("id", userId).single();
+  const locPrefs: LocationPrefs = {
+    places: lp?.job_locations ?? [],
+    modes: (lp?.work_modes as WorkMode[] | null) ?? ["remote", "hybrid", "onsite"],
+    includeUnknown: lp?.include_unknown_location ?? true,
+  };
   const { data: passes } = await admin
     .from("user_pipeline")
     .select("pass_reason, jobs(title, company_name)")
@@ -156,12 +163,13 @@ async function candidateBrief(userId: string) {
 Location: ${profile.location ?? "unknown"} | Availability: ${profile.availability_status ?? ""}
 Target roles: ${(profile.target_roles ?? []).join(", ") || "infer from profile"}
 Preferred organisation types: ${(profile.preferred_org_types ?? []).join(", ")}
+Job location preference (STRICT — only suggest roles/companies that fit): ${describePrefs(locPrefs)}
 Summary: ${master.summary}
 Experience: ${master.experience.map((e) => `${e.role} at ${e.company} (${e.dates})`).join("; ")}
 Key projects: ${master.projects.map((p) => `${p.title} for ${p.client_or_org}`).join("; ")}
 Skills: ${master.skills.join(", ")}
 ${passLines.length ? `\nPASS HISTORY (avoid similar):\n${passLines.join("\n")}` : ""}`;
-  return { profile, master, brief };
+  return { profile, master, brief, locPrefs };
 }
 
 function countryFrom(location: string | null) {
@@ -275,7 +283,7 @@ export async function scanCompanyForUser(userId: string, companyId: string, dead
 /** Web search for open roles matching the user (beyond their company list). */
 export async function searchRolesForUser(userId: string, deadline = Date.now() + 240_000, maxImports = 6) {
   const admin = createAdminClient();
-  const { profile, brief } = await candidateBrief(userId);
+  const { profile, brief, locPrefs } = await candidateBrief(userId);
   const { data: list } = await admin.from("user_companies").select("target_companies(name)").eq("user_id", userId).eq("status", "active");
   const names = (list ?? [])
     .map((r) => ((Array.isArray(r.target_companies) ? r.target_companies[0] : r.target_companies) as { name: string } | null)?.name)
@@ -309,6 +317,8 @@ export async function searchRolesForUser(userId: string, deadline = Date.now() +
         if (page.markdown.trim().length < 200) continue;
         const extracted = await extractJob(page);
         if (!extracted.is_job_posting) continue;
+        // Don't spend an import on roles outside the user's locations.
+        if (!matchesLocation({ location: extracted.location ?? null, work_mode: extracted.work_mode }, locPrefs)) continue;
         const saved = await saveJob({ url, extracted });
         imported++;
         const { data: withVec } = await admin.from("jobs").select("id, company_slug, embedding").eq("id", saved.id).single();

@@ -3,8 +3,9 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState, useTransition } from "react";
-import { ArrowLeft, ArrowRight, Check, ExternalLink, Loader2, MapPin, Radar, Sparkles, Undo2, X } from "lucide-react";
-import { approveAction, passAction, setStatusAction } from "@/app/dashboard/actions";
+import { ArrowLeft, ArrowRight, Check, ExternalLink, Loader2, MapPin, Plus, Radar, Sparkles, Undo2, X } from "lucide-react";
+import { approveAction, passAction, saveLocationPrefsAction, setStatusAction } from "@/app/dashboard/actions";
+import { ALL_MODES, MODE_LABEL, matchesLocation, type LocationPrefs, type WorkMode } from "@/lib/location";
 import { Button, Card, OrgTypeBadge, buttonClass } from "@/components/ui";
 import { cn } from "@/lib/utils";
 
@@ -43,8 +44,28 @@ async function api<T>(body: object): Promise<T & { ok: boolean; error?: string }
   }
 }
 
-export function DiscoverClient({ cards, companies, autoRun }: { cards: DeckCard[]; companies: { id: string; name: string }[]; autoRun: boolean }) {
+export function DiscoverClient({
+  cards,
+  companies,
+  autoRun,
+  initialPrefs,
+  homeCity,
+}: {
+  cards: DeckCard[];
+  companies: { id: string; name: string }[];
+  autoRun: boolean;
+  initialPrefs: LocationPrefs;
+  homeCity: string | null;
+}) {
   const router = useRouter();
+  const [prefs, setPrefs] = useState<LocationPrefs>(initialPrefs);
+  const [, startSave] = useTransition();
+  const updatePrefs = (next: LocationPrefs) => {
+    setPrefs(next);
+    startSave(async () => {
+      await saveLocationPrefsAction(next);
+    });
+  };
   const [gone, setGone] = useState<Set<string>>(new Set());
   const [fits, setFits] = useState<Record<string, Fit | "error">>({});
   const [drag, setDrag] = useState({ x: 0, active: false });
@@ -95,7 +116,9 @@ export function DiscoverClient({ cards, companies, autoRun }: { cards: DeckCard[
   }, [autoRun, runDiscovery]);
 
   // ---------------- deck
-  const deck = cards.filter((c) => !gone.has(c.id));
+  const remaining = cards.filter((c) => !gone.has(c.id));
+  const deck = remaining.filter((c) => matchesLocation(c.job, prefs));
+  const hidden = remaining.length - deck.length;
   const top = deck[0];
   const next = deck[1];
 
@@ -177,9 +200,12 @@ export function DiscoverClient({ cards, companies, autoRun }: { cards: DeckCard[
             <h1 className="font-serif text-4xl">Discover</h1>
             <p className="mt-1 text-sm text-muted">
               {deck.length ? `${deck.length} role${deck.length === 1 ? "" : "s"} to review. Swipe right to apply, left to pass.` : "Nothing to review right now."}
+              {hidden > 0 && <span> {hidden} hidden by your location filter.</span>}
             </p>
           </div>
         </div>
+
+        <LocationFilter prefs={prefs} onChange={updatePrefs} homeCity={homeCity} />
 
         {error && <p className="mb-3 rounded-lg border border-orange-200 bg-orange-50 px-3 py-2 text-sm text-warn">{error}</p>}
 
@@ -413,6 +439,83 @@ function CardBody({ card, fit }: { card: DeckCard; fit?: Fit | "error" }) {
           View posting <ExternalLink className="size-3" />
         </a>
       </div>
+    </div>
+  );
+}
+
+function LocationFilter({ prefs, onChange, homeCity }: { prefs: LocationPrefs; onChange: (p: LocationPrefs) => void; homeCity: string | null }) {
+  const [draft, setDraft] = useState("");
+  const add = (place: string) => {
+    const v = place.trim();
+    if (!v || prefs.places.some((p) => p.toLowerCase() === v.toLowerCase())) return;
+    onChange({ ...prefs, places: [...prefs.places, v] });
+    setDraft("");
+  };
+  const toggleMode = (m: WorkMode) => {
+    const on = prefs.modes.includes(m);
+    const modes = on ? prefs.modes.filter((x) => x !== m) : [...prefs.modes, m];
+    if (modes.length) onChange({ ...prefs, modes });
+  };
+  const suggest = homeCity && !prefs.places.some((p) => p.toLowerCase() === homeCity.toLowerCase()) ? homeCity : null;
+
+  return (
+    <div className="mb-4 space-y-2.5 rounded-2xl border border-line bg-surface p-3">
+      <div className="flex flex-wrap items-center gap-1.5" role="group" aria-label="Work mode">
+        <span className="mr-1 inline-flex items-center gap-1 text-xs font-medium text-muted">
+          <MapPin className="size-3.5" /> Where
+        </span>
+        {ALL_MODES.map((m) => {
+          const on = prefs.modes.includes(m);
+          return (
+            <button
+              key={m}
+              type="button"
+              aria-pressed={on}
+              onClick={() => toggleMode(m)}
+              className={cn("min-h-8 rounded-full border px-3 text-xs", on ? "border-ink bg-ink text-paper" : "border-line text-muted hover:border-ink/40")}
+            >
+              {MODE_LABEL[m]}
+            </button>
+          );
+        })}
+      </div>
+      <div className="flex flex-wrap items-center gap-1.5">
+        {prefs.places.length === 0 && <span className="text-xs text-muted">Any location</span>}
+        {prefs.places.map((p) => (
+          <span key={p} className="inline-flex min-h-8 items-center gap-1 rounded-full bg-accent-soft pl-3 pr-1 text-xs font-medium text-accent">
+            {p}
+            <button type="button" aria-label={`Remove ${p}`} onClick={() => onChange({ ...prefs, places: prefs.places.filter((x) => x !== p) })} className="rounded-full p-1 hover:bg-accent/10">
+              <X className="size-3" />
+            </button>
+          </span>
+        ))}
+        {suggest && (
+          <button type="button" onClick={() => add(suggest)} className="inline-flex min-h-8 items-center gap-1 rounded-full border border-dashed border-line px-3 text-xs text-muted hover:border-ink/40">
+            <Plus className="size-3" /> {suggest}
+          </button>
+        )}
+        <form
+          className="flex items-center"
+          onSubmit={(e) => {
+            e.preventDefault();
+            add(draft);
+          }}
+        >
+          <input
+            value={draft}
+            onChange={(e) => setDraft(e.target.value)}
+            placeholder="Add a city or country…"
+            aria-label="Add a location"
+            className="h-8 w-44 rounded-full border border-line bg-paper px-3 text-xs outline-none focus:border-ink/40"
+          />
+        </form>
+      </div>
+      {prefs.places.length > 0 && (
+        <label className="flex items-center gap-2 text-xs text-muted">
+          <input type="checkbox" checked={prefs.includeUnknown} onChange={(e) => onChange({ ...prefs, includeUnknown: e.target.checked })} />
+          Include jobs that don&apos;t list a location
+        </label>
+      )}
     </div>
   );
 }
