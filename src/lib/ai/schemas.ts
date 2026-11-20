@@ -156,3 +156,23 @@ export const OutreachSchema = z.object({
   follow_up_after_days: z.number().describe("Days to wait before following up, typically 5-10"),
 });
 export type Outreach = z.infer<typeof OutreachSchema>;
+
+// G. CV / LinkedIn review
+export const ProfileReviewSchema = z.object({
+  overall_score: z.number().describe("0-100, calibrated: 50 = typical, 70 = strong, 85+ = exceptional"),
+  verdict: z.string().describe("Two sentences: the honest headline assessment"),
+  categories: z.array(z.object({ name: z.string(), score: z.number().describe("0-10"), comment: z.string().describe("One specific sentence") })),
+  strengths: z.array(z.string()).describe("2-4 specific strengths"),
+  improvements: z
+    .array(
+      z.object({
+        priority: z.enum(["high", "medium", "low"]),
+        issue: z.string(),
+        fix: z.string().describe("Concrete instruction"),
+        example: z.string().optional().describe("Suggested rewrite using ONLY facts present; use [brackets] for numbers the candidate must supply"),
+      }),
+    )
+    .describe("3-7 improvements, highest impact first"),
+  consistency_issues: z.array(z.string()).describe("LinkedIn only: concrete mismatches with the CV (titles, dates, employers). Empty for CV reviews."),
+});
+export type ProfileReview = z.infer<typeof ProfileReviewSchema>;

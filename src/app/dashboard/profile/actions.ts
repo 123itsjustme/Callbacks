@@ -76,3 +76,37 @@ export async function saveMasterAction(_: R | null, fd: FormData): Promise<R> {
   if (profile) revalidatePath(`/${profile.username}`);
   return { ok: true, message: embedding ? "Master profile saved and re-indexed for matching." : "Saved (matching index not refreshed — check OPENAI_API_KEY)." };
 }
+
+export async function reviewCvAction(): Promise<{ ok: true } | { ok: false; error: string }> {
+  try {
+    const { supabase, user } = await requireUser();
+    const { reviewCv } = await import("@/lib/reviews");
+    await reviewCv(supabase, user.id);
+    revalidatePath("/dashboard/profile");
+    return { ok: true };
+  } catch (e) {
+    console.error("[reviewCv]", e);
+    return { ok: false, error: (e as Error).message };
+  }
+}
+
+export async function reviewLinkedInAction(fd: FormData): Promise<{ ok: true } | { ok: false; error: string }> {
+  try {
+    const { supabase, user } = await requireUser();
+    let text = String(fd.get("text") ?? "").trim();
+    const file = fd.get("file");
+    if (!text && file instanceof File && file.size > 0) {
+      if (file.size > 4 * 1024 * 1024) return { ok: false, error: "That file is over 4MB." };
+      const { extractCvText } = await import("@/lib/cv-text");
+      text = (await extractCvText(file)).trim();
+    }
+    if (text.length < 200) return { ok: false, error: "Paste your LinkedIn profile (headline, About and experience) or upload LinkedIn's “Save to PDF” export." };
+    const { reviewLinkedIn } = await import("@/lib/reviews");
+    await reviewLinkedIn(supabase, user.id, text);
+    revalidatePath("/dashboard/profile");
+    return { ok: true };
+  } catch (e) {
+    console.error("[reviewLinkedIn]", e);
+    return { ok: false, error: (e as Error).message };
+  }
+}

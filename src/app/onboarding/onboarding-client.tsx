@@ -60,6 +60,9 @@ export function OnboardingClient({ appUrl, hasProfile }: { appUrl: string; hasPr
                 <Link href="/dashboard/companies?suggest=1" className={buttonClass("primary", "sm")}>
                   Find my 10 companies →
                 </Link>
+                <Link href="/dashboard/profile#score" className={buttonClass("secondary", "sm")}>
+                  Score my CV &amp; LinkedIn
+                </Link>
                 <Link href="/dashboard" className={buttonClass("secondary", "sm")}>
                   Open My Job Pipeline
                 </Link>

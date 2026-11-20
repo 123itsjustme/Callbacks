@@ -8,6 +8,7 @@ const LINKS = [
   { href: "/dashboard/discover", label: "Discover" },
   { href: "/dashboard", label: "Pipeline" },
   { href: "/dashboard/companies", label: "Companies" },
+  { href: "/dashboard/profile#score", label: "Score" },
   { href: "/dashboard/profile", label: "Profile" },
 ];
 
@@ -16,7 +17,12 @@ export function DashNav() {
   return (
     <nav className="flex items-center gap-1 overflow-x-auto text-sm">
       {LINKS.map((l) => {
-        const active = l.href === "/dashboard" ? path === "/dashboard" || path.startsWith("/dashboard/pipeline") : path.startsWith(l.href);
+        const active =
+          l.href === "/dashboard"
+            ? path === "/dashboard" || path.startsWith("/dashboard/pipeline")
+            : l.href.includes("#")
+              ? false
+              : path.startsWith(l.href);
         return (
           <Link key={l.href} href={l.href} className={cn("whitespace-nowrap rounded-full px-3 py-1.5", active ? "bg-ink text-paper" : "text-muted hover:text-ink")}>
             {l.label}
