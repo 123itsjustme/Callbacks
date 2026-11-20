@@ -115,3 +115,44 @@ export const TailoredApplicationSchema = z.object({
   featured_project_ids: z.array(z.string()).describe("Up to 3 exact project ids from the Master Profile"),
 });
 export type TailoredApplication = z.infer<typeof TailoredApplicationSchema>;
+
+// D. Company discovery (web research -> structured)
+export const CompanySuggestionsSchema = z.object({
+  companies: z.array(
+    z.object({
+      name: z.string(),
+      org_type: OrgTypeWithOtherEnum,
+      website: z.string().describe("Company homepage URL"),
+      careers_url: z.string().describe("Direct URL of the careers / jobs page or ATS board, as found in research"),
+      hq_location: z.string().optional(),
+      why_fit: z.string().describe("One sentence linking the candidate's actual experience to this company"),
+    }),
+  ),
+});
+export type CompanySuggestion = z.infer<typeof CompanySuggestionsSchema>["companies"][number];
+
+// E. Role search (web research -> structured)
+export const RoleSearchSchema = z.object({
+  roles: z.array(
+    z.object({
+      title: z.string(),
+      company: z.string(),
+      url: z.string().describe("Direct URL of the individual job posting"),
+    }),
+  ),
+});
+
+// F. Outreach kit (generated on approve)
+export const OutreachSchema = z.object({
+  recommended_route: z.enum(["apply_direct", "hiring_manager", "recruiter", "referral"]),
+  route_reasoning: z.string().describe("1-2 sentences on why this route"),
+  who_to_contact: z
+    .array(z.object({ title: z.string().describe("A job title to look for, not a person's name"), why: z.string() }))
+    .describe("2-3 job titles to look for at the company"),
+  linkedin_note: z.string().describe("LinkedIn connection note, under 280 characters"),
+  email_subject: z.string(),
+  email_body_md: z.string().describe("Short outreach email, under 150 words"),
+  follow_up_md: z.string().describe("Polite follow-up message to send if there is no reply"),
+  follow_up_after_days: z.number().describe("Days to wait before following up, typically 5-10"),
+});
+export type Outreach = z.infer<typeof OutreachSchema>;

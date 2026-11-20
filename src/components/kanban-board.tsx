@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useOptimistic, useState, useTransition } from "react";
+import { useEffect, useOptimistic, useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { Check, Loader2, MapPin, X, Eye, Sparkles } from "lucide-react";
 import { approveAction, setStatusAction } from "@/app/dashboard/actions";
 import { Button, OrgTypeBadge, ScorePill } from "@/components/ui";
@@ -15,6 +16,9 @@ export type KanbanItem = {
   red_flags: string[] | null;
   microsite_views: number;
   has_assets: boolean;
+  generating: boolean;
+  next_action: string | null;
+  next_action_due: string | null;
   job: { title: string; company_name: string; org_type: string; location: string | null; work_mode: string | null };
 };
 
@@ -35,6 +39,13 @@ export function KanbanBoard({ items }: { items: KanbanItem[] }) {
   const [showArchived, setShowArchived] = useState(false);
   const [, start] = useTransition();
   const [dragOver, setDragOver] = useState<PipelineStatus | null>(null);
+  const router = useRouter();
+  const anyGenerating = items.some((i) => i.generating);
+  useEffect(() => {
+    if (!anyGenerating) return;
+    const t = setInterval(() => router.refresh(), 5000);
+    return () => clearInterval(t);
+  }, [anyGenerating, router]);
 
   const run = (id: string, label: string, status: PipelineStatus, fn: () => Promise<{ ok: boolean; error?: string }>) => {
     setError(null);
@@ -54,8 +65,8 @@ export function KanbanBoard({ items }: { items: KanbanItem[] }) {
   const changeStatus = (id: string, status: PipelineStatus) => {
     const item = optimistic.find((i) => i.id === id);
     if (!item || item.status === status) return;
-    if (status === "approved" && item.status === "new") return run(id, "Generating…", status, () => approveAction(id));
-    run(id, status !== "passed" && !item.has_assets && status !== "rejected" ? "Generating…" : "Moving…", status, () => setStatusAction(id, status));
+    if (status === "approved" && item.status === "new") return run(id, "Approving…", status, () => approveAction(id));
+    run(id, "Moving…", status, () => setStatusAction(id, status));
   };
 
   const archived = optimistic.filter((i) => i.status === "passed" || i.status === "rejected");
@@ -145,6 +156,17 @@ function Card({ item, busy, onStatus }: { item: KanbanItem; busy?: string; onSta
         )}
       </div>
       {item.status === "new" && item.red_flags && item.red_flags.length > 0 && <p className="mt-2 line-clamp-2 text-xs text-warn">⚑ {item.red_flags[0]}</p>}
+      {item.generating && (
+        <p className="mt-2 inline-flex items-center gap-1.5 text-xs text-accent">
+          <Loader2 className="size-3 animate-spin" /> Writing CV, cover letter &amp; outreach…
+        </p>
+      )}
+      {item.next_action && !item.generating && item.status !== "new" && (
+        <p className="mt-2 line-clamp-2 text-xs text-muted">
+          → {item.next_action}
+          {item.next_action_due && <span className="font-medium"> · {new Date(item.next_action_due).toLocaleDateString(undefined, { day: "numeric", month: "short" })}</span>}
+        </p>
+      )}
 
       {busy ? (
         <p className="mt-3 inline-flex items-center gap-1.5 text-xs text-muted">
@@ -152,7 +174,7 @@ function Card({ item, busy, onStatus }: { item: KanbanItem; busy?: string; onSta
         </p>
       ) : item.status === "new" ? (
         <div className="mt-3 flex gap-1.5">
-          <Button size="sm" onClick={() => onStatus("approved")} title="Generate tailored CV, cover letter & pitch page">
+          <Button size="sm" onClick={() => onStatus("approved")} title="Generate tailored CV, cover letter, pitch page & outreach kit">
             <Check className="size-3.5" /> Approve
           </Button>
           <Button size="sm" variant="ghost" onClick={() => onStatus("passed")}>

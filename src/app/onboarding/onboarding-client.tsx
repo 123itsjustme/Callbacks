@@ -57,7 +57,10 @@ export function OnboardingClient({ appUrl, hasProfile }: { appUrl: string; hasPr
               </p>
               {result.matchError && <p className="mt-2 text-sm text-warn">{result.matchError}</p>}
               <div className="mt-4 flex flex-wrap gap-2">
-                <Link href="/dashboard" className={buttonClass("primary", "sm")}>
+                <Link href="/dashboard/companies?suggest=1" className={buttonClass("primary", "sm")}>
+                  Find my 10 companies →
+                </Link>
+                <Link href="/dashboard" className={buttonClass("secondary", "sm")}>
                   Open My Job Pipeline
                 </Link>
                 <Link href={`/${username}`} target="_blank" className={buttonClass("secondary", "sm")}>

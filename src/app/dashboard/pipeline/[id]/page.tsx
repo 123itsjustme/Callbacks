@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { ArrowLeft, ExternalLink, MapPin } from "lucide-react";
 import { requireUser } from "@/lib/supabase/server";
 import { loadUserContext, type JobRow } from "@/lib/jobs";
-import type { TailoredCV } from "@/lib/ai/schemas";
+import type { Outreach, TailoredCV } from "@/lib/ai/schemas";
 import { Badge, Card, Markdown, OrgTypeBadge, ScorePill } from "@/components/ui";
 import { appUrl } from "@/lib/utils";
 import { Studio } from "./studio";
@@ -26,6 +26,12 @@ export default async function PipelinePage({ params }: PageProps<"/dashboard/pip
   const job = (Array.isArray(row.jobs) ? row.jobs[0] : row.jobs) as JobRow;
   const { profile, master } = await loadUserContext(supabase, user.id);
   if (!profile || !master) notFound();
+  const { data: events } = await supabase
+    .from("pipeline_events")
+    .select("id, kind, detail, created_at")
+    .eq("pipeline_id", id)
+    .order("created_at", { ascending: false })
+    .limit(40);
 
   const pitchUrl = appUrl(`/${profile.username}/for/${row.company_slug}`);
 
@@ -103,6 +109,12 @@ export default async function PipelinePage({ params }: PageProps<"/dashboard/pip
           pitchIntro={row.custom_pitch_intro ?? ""}
           featured={row.featured_project_ids ?? []}
           notes={row.notes ?? ""}
+          assetsStatus={row.assets_status ?? "none"}
+          assetsError={row.assets_error ?? null}
+          outreach={row.outreach_json as Outreach | null}
+          nextAction={row.next_action ?? null}
+          nextActionDue={row.next_action_due ?? null}
+          events={events ?? []}
           projects={master.projects.map((p) => ({ id: p.id, title: p.title, client: p.client_or_org }))}
         />
       </div>

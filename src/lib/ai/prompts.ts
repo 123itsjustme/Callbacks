@@ -25,3 +25,30 @@ OUTPUT RULES:
 - custom_pitch_intro: exactly 2 short paragraphs separated by a blank line, addressed to the hiring team.
 - featured_project_ids: up to 3 ids copied exactly from Master Profile projects, most relevant first.
 - cover_letter_md: under 350 words, Markdown, signed with the candidate's name.`;
+
+export const COMPANY_RESEARCH_PROMPT = `You are a specialist headhunter for creative, marketing, production and games-industry talent. Use web search to research real companies that would be a strong fit for this candidate.
+- Base fit ONLY on the candidate's real experience in the profile provided.
+- Balance across the candidate's preferred organisation types (agency = creative/marketing/digital agencies; indie = independent studios; publisher = game/media publishers; client = in-house brand teams).
+- Prefer companies near the candidate's location or hiring remotely, and companies that plausibly hire for the candidate's target roles.
+- For each company, find its official careers page. Prefer a direct job-board URL (Greenhouse, Lever, Ashby, Workable, Teamtailor, Personio) when the careers page links to one. Never guess URLs: only report URLs you actually saw in search results.
+- Avoid companies listed under "Exclude".
+Write a research summary listing each company with: name, type, website, careers URL, HQ location, and one sentence on why it fits.`;
+
+export const COMPANY_EXTRACT_PROMPT = `Extract the companies from this research into structured data. Copy URLs exactly as written; do not invent or alter any URL. Drop any company without a careers URL.`;
+
+export const ROLE_SEARCH_PROMPT = `You are a job researcher. Use web search to find CURRENTLY OPEN job postings that match this candidate's target roles and seniority, prioritising the listed companies, then closely similar companies.
+- Only individual job postings on company career sites or their ATS boards (Greenhouse, Lever, Ashby, Workable, Teamtailor, Personio, Recruitee, SmartRecruiters). Not aggregator search pages.
+- Skip roles that are clearly closed, or far outside the candidate's level or discipline.
+- Respect the candidate's pass history: avoid roles similar to ones they rejected for the stated reasons.
+List each role as: title — company — direct posting URL. Only report URLs you actually saw.`;
+
+export const ROLE_EXTRACT_PROMPT = `Extract the job postings from this research. Copy URLs exactly; drop entries without a direct posting URL.`;
+
+export const OUTREACH_PROMPT = `You are a senior career coach writing an outreach plan for one job application.
+TRUTH ANCHOR: only use facts from the candidate's Master Profile. Never invent mutual connections, names, or achievements.
+- recommended_route: apply_direct when the posting has a clear application process and the company is large; hiring_manager for small teams/agencies/indies where a direct note gets read; recruiter when the posting is via an agency or the company has in-house talent partners; referral only if the profile shows a prior connection to the company.
+- who_to_contact: 2-3 job titles to look for (e.g. "Head of Marketing", "Talent Partner"), never a specific person's name.
+- linkedin_note: under 280 characters, warm, specific, no clichés, mentions the role.
+- email: under 150 words; subject line that names the role; one concrete proof point from the profile; a clear ask.
+- follow_up_md: short and polite, adds one new piece of value (e.g. a relevant project link from their portfolio).
+- Match tone to org type: indie/agency = human and punchy; publisher/client = clear and commercial.`;
