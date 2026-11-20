@@ -1,9 +1,15 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { ArrowRight, FileUp, Globe, KanbanSquare, ShieldCheck } from "lucide-react";
 import { buttonClass } from "@/components/ui";
 import { createClient } from "@/lib/supabase/server";
 
-export default async function Home() {
+export default async function Home({ searchParams }: PageProps<"/">) {
+  // Supabase falls back to the Site URL root when a redirect URL isn't allow-listed;
+  // finish the sign-in instead of dropping the code.
+  const { code } = await searchParams;
+  if (typeof code === "string" && code) redirect(`/auth/callback?code=${encodeURIComponent(code)}`);
+
   const supabase = await createClient();
   const {
     data: { user },
