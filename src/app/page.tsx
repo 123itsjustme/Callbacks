@@ -1,69 +1,71 @@
-import Image from "next/image";
+import Link from "next/link";
+import { ArrowRight, FileUp, Globe, KanbanSquare, ShieldCheck } from "lucide-react";
+import { buttonClass } from "@/components/ui";
+import { createClient } from "@/lib/supabase/server";
 
-export default function Home() {
+export default async function Home() {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{" "}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.tsx
-            </code>{" "}
-            file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <main className="flex-1">
+      <header className="mx-auto flex max-w-6xl items-center justify-between px-6 py-6">
+        <span className="font-serif text-2xl">Folio</span>
+        <nav className="flex items-center gap-2">
+          {user ? (
+            <Link href="/dashboard" className={buttonClass("primary", "sm")}>
+              Open dashboard
+            </Link>
+          ) : (
+            <>
+              <Link href="/login" className={buttonClass("ghost", "sm")}>
+                Sign in
+              </Link>
+              <Link href="/login?mode=signup" className={buttonClass("primary", "sm")}>
+                Get started
+              </Link>
+            </>
+          )}
+        </nav>
+      </header>
+
+      <section className="mx-auto max-w-6xl px-6 pb-16 pt-12 md:pt-24">
+        <p className="mb-6 text-xs font-medium uppercase tracking-[0.2em] text-muted">For producers, strategists & creatives</p>
+        <h1 className="max-w-4xl font-serif text-5xl leading-[1.02] md:text-7xl">
+          Upload your CV. <em className="text-accent">Get matched</em> — and a live portfolio for every company you pitch.
+        </h1>
+        <p className="mt-8 max-w-2xl text-lg leading-relaxed text-muted">
+          Folio turns your CV into a master profile and an interactive microsite, finds roles at agencies, indies, publishers and
+          in-house teams, and writes a truth-anchored CV, cover letter and custom landing page for each one you approve.
+        </p>
+        <div className="mt-10 flex flex-wrap gap-3">
+          <Link href={user ? "/onboarding" : "/login?mode=signup&next=/onboarding"} className={buttonClass("primary")}>
+            Upload my CV <ArrowRight className="size-4" />
+          </Link>
+          <Link href="#how" className={buttonClass("secondary")}>
+            How it works
+          </Link>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+      </section>
+
+      <section id="how" className="border-t border-line bg-surface">
+        <div className="mx-auto grid max-w-6xl gap-px bg-line md:grid-cols-4">
+          {[
+            { icon: FileUp, t: "Upload CV", d: "PDF or DOCX parsed into a structured master profile — every metric kept verbatim." },
+            { icon: Globe, t: "Live microsite", d: "/you — filterable case studies, availability pill and one-click PDF CV." },
+            { icon: KanbanSquare, t: "Approve jobs", d: "Paste any job URL or let the daily scan find roles. You approve; nothing auto-sends." },
+            { icon: ShieldCheck, t: "Truth-anchored", d: "Tailored CVs can only reorder and select. No invented employers, dates or numbers." },
+          ].map(({ icon: Icon, t, d }) => (
+            <div key={t} className="bg-surface p-8">
+              <Icon className="mb-6 size-5 text-accent" />
+              <h3 className="mb-2 font-medium">{t}</h3>
+              <p className="text-sm leading-relaxed text-muted">{d}</p>
+            </div>
+          ))}
         </div>
-      </main>
-    </div>
+      </section>
+    </main>
   );
 }

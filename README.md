@@ -1,36 +1,48 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Folio — AI Job Hunter & Portfolio Microsite
 
-## Getting Started
+Upload a CV → master profile + live microsite (`/[username]`) → discover/import jobs → approve on a Kanban →
+truth-anchored tailored CV (PDF), tone-matched cover letter and a company pitch page (`/[username]/for/[company]`).
 
-First, run the development server:
+Next.js 16 (App Router, `proxy.ts`), Supabase (Postgres + pgvector + Auth + Storage), AI SDK v7
+(`generateText` + `Output.object` with Zod), Anthropic for generation, OpenAI `text-embedding-3-small` for matching.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## Setup
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+1. `cp .env.example .env.local` and fill in:
+   - `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` — already set for the `job-hunter` project
+   - `SUPABASE_SERVICE_ROLE_KEY` — Supabase → Project Settings → API Keys (secret key)
+   - `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`
+   - `CRON_SECRET` — any long random string (`openssl rand -hex 32`)
+   - `FIRECRAWL_API_KEY` — optional; without it pages are fetched directly and converted to text
+   - `AI_MODEL` — optional, defaults to `claude-sonnet-5-5`
+2. `npm install && npm run dev`
+3. In Supabase → Authentication → URL Configuration, add `http://localhost:3000/auth/callback` and your production
+   `https://<domain>/auth/callback` to Redirect URLs (needed for magic links and email confirmation).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+The database schema is in `supabase/migrations/0001_init.sql` (already applied to the `job-hunter` project).
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Deploying (Vercel)
 
-## Learn More
+Import the repo, add the env vars above (set `NEXT_PUBLIC_APP_URL` to the production URL), deploy.
+`vercel.json` schedules `/api/cron/scrape` daily at 06:17 UTC; Vercel sends `Authorization: Bearer $CRON_SECRET`.
+LLM-heavy routes set `maxDuration = 300`.
 
-To learn more about Next.js, take a look at the following resources:
+## How the pieces fit
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+| Area | Where |
+| --- | --- |
+| CV parse → profile, embedding, instant job matches | `src/app/onboarding/actions.ts` |
+| URL import → scrape → classify → embed → fit score | `src/lib/jobs.ts#importJobForUser` |
+| Approve → tailored CV / cover letter / pitch | `src/lib/jobs.ts#tailorApplication` |
+| Truth-anchor guard (post-generation) | `src/lib/jobs.ts#enforceTruthAnchor` |
+| Watchlist scanning (Greenhouse/Lever/Ashby APIs, else scrape) | `src/lib/discovery.ts`, `src/lib/scraper.ts` |
+| Public microsite + pitch pages | `src/app/[username]`, `src/components/public-portfolio-view.tsx` |
+| PDF CVs | `src/app/api/pdf/[pipelineId]/route.tsx`, `src/components/pdf-cv-document.tsx` |
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Security notes
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- No public RLS policy on `user_pipeline`: notes, fit reasoning, red flags and cover letters are never exposed.
+  Public pages read whitelisted columns server-side with the service role (`src/lib/portfolio.ts`).
+- Tailored CV PDFs are public only while the pitch is active (approved/applied/interview/offer) and are addressed by UUID.
+- `increment_microsite_views` is callable only by the service role; owner previews aren't counted.
+- The watchlist is shared: any signed-in user can add, edit or remove companies (fine for two beta users).
